@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phishsafe_sdk/phishsafe_sdk.dart';
 import 'package:phishsafe_sdk/route_aware_wrapper.dart';
 import 'package:dummy_bank/observer.dart';
+import 'package:dummy_bank/screens/pin_popup.dart'; // Import your shared PinPopup
 
 class ManageDepositsPage extends StatefulWidget {
   @override
@@ -32,22 +33,23 @@ class _ManageDepositsPageState extends State<ManageDepositsPage> {
     },
   ];
 
-
   void _showPinPopup(BuildContext context, VoidCallback onSuccess) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => PinPopup(onComplete: (enteredPin) {
-        Navigator.pop(context); // Close popup
-        onSuccess();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Fixed Deposit broken successfully."),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context); // Go back to homepage
-      }),
+      builder: (_) => PinPopup(
+        onComplete: (enteredPin) {
+          Navigator.pop(context); // Close popup
+          onSuccess();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Fixed Deposit broken successfully."),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context); // Go back to homepage
+        },
+      ),
     );
   }
 
@@ -175,155 +177,6 @@ class _ManageDepositsPageState extends State<ManageDepositsPage> {
         Text(label, style: TextStyle(color: Colors.grey)),
         Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
       ],
-    );
-  }
-}
-
-// Inline PIN Popup Widget (no separate import)
-class PinPopup extends StatefulWidget {
-  final void Function(String) onComplete;
-
-  const PinPopup({Key? key, required this.onComplete}) : super(key: key);
-
-  @override
-  State<PinPopup> createState() => _PinPopupState();
-}
-
-class _PinPopupState extends State<PinPopup> {
-  List<String> enteredDigits = [];
-  String? errorText;
-
-  void onKeyTap(String val) {
-    if (enteredDigits.length < 5) {
-      setState(() => enteredDigits.add(val));
-    }
-  }
-
-  void onDelete() {
-    if (enteredDigits.isNotEmpty) {
-      setState(() => enteredDigits.removeLast());
-    }
-  }
-
-  void onSubmit() {
-    final pin = enteredDigits.join();
-    if (pin == "12345") {
-      widget.onComplete(pin);
-    } else {
-      setState(() {
-        errorText = "Incorrect PIN. Please try again.";
-        enteredDigits.clear();
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final keys = ['1','2','3','4','5','6','7','8','9'];
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.all(20),
-            margin: EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Enter PIN", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (index) => Container(
-                    margin: EdgeInsets.symmetric(horizontal: 6),
-                    width: 40,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Color(0xFF3B5EDF)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text(index < enteredDigits.length ? '●' : '',
-                          style: TextStyle(fontSize: 24, color: Color(0xFF3B5EDF))),
-                    ),
-                  )),
-                ),
-                if (errorText != null) ...[
-                  SizedBox(height: 12),
-                  Text(errorText!, style: TextStyle(color: Colors.red)),
-                ],
-                SizedBox(height: 16),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: keys.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 1.2,
-                  ),
-                  itemBuilder: (context, index) {
-                    final key = keys[index];
-                    return _keyButton(text: key, onTap: () => onKeyTap(key));
-                  },
-                ),
-                SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(child: _keyButton(
-                      text: 'Submit',
-                      backgroundColor: Color(0xFF3B5EDF),
-                      textColor: Colors.white,
-                      onTap: onSubmit,
-                    )),
-                    SizedBox(width: 8),
-                    Expanded(child: _keyButton(text: '0', onTap: () => onKeyTap('0'))),
-                    SizedBox(width: 8),
-                    Expanded(child: _keyButton(icon: Icons.backspace_outlined, onTap: onDelete)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _keyButton({
-    String? text,
-    IconData? icon,
-    Color? backgroundColor,
-    Color? textColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.grey[100],
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: icon != null
-              ? Icon(icon, size: 20)
-              : Text(
-            text ?? '',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: textColor ?? Colors.black,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

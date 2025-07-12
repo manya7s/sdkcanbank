@@ -3,201 +3,285 @@ import 'package:flutter/material.dart';
 class PinPopup extends StatefulWidget {
   final void Function(String) onComplete;
 
-  const PinPopup({Key? key, required this.onComplete}) : super(key: key);
+  const PinPopup({
+    required this.onComplete,
+    Key? key,
+  }) : super(key: key);
 
   @override
-  State<PinPopup> createState() => _PinPopupState();
+  _PinPopupState createState() => _PinPopupState();
 }
 
 class _PinPopupState extends State<PinPopup> {
-  List<String> enteredDigits = [];
-  String? errorText;
+  static const int pinLength = 5;
+  static const String correctPin = '12345';
 
-  void onKeyTap(String val) {
-    if (enteredDigits.length < 5) {
+  final List<String> _otpDigits = List.filled(pinLength, '');
+  final List<FocusNode> _focusNodes = List.generate(pinLength, (index) => FocusNode());
+  bool _isError = false;
+  bool _isLoading = false;
+  int _currentFocusIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 100), () {
+      FocusScope.of(context).requestFocus(_focusNodes[0]);
+    });
+  }
+
+  @override
+  void dispose() {
+    for (var node in _focusNodes) {
+      node.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _verifyOTP() async {
+    final enteredPIN = _otpDigits.join();
+
+    if (enteredPIN.length != pinLength || enteredPIN != correctPin) {
+      setState(() => _isError = true);
+      _clearOTPFields();
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await Future.delayed(Duration(milliseconds: 500));
+      widget.onComplete(enteredPIN);
+    } catch (e) {
       setState(() {
-        enteredDigits.add(val);
+        _isError = true;
+        _isLoading = false;
+      });
+      _clearOTPFields();
+    }
+  }
+
+  void _clearOTPFields() {
+    setState(() {
+      _otpDigits.fillRange(0, pinLength, '');
+      _currentFocusIndex = 0;
+      // Keep error flag as is
+      FocusScope.of(context).requestFocus(_focusNodes[0]);
+    });
+  }
+
+  void _onNumberPressed(int number) {
+    if (_currentFocusIndex < pinLength) {
+      setState(() {
+        _otpDigits[_currentFocusIndex] = number.toString();
+        if (_currentFocusIndex < pinLength - 1) {
+          _currentFocusIndex++;
+          FocusScope.of(context).requestFocus(_focusNodes[_currentFocusIndex]);
+        }
       });
     }
   }
 
-  void onDelete() {
-    if (enteredDigits.isNotEmpty) {
-      setState(() {
-        enteredDigits.removeLast();
-      });
+  void _onBackspacePressed() {
+    if (_currentFocusIndex > 0 && _otpDigits[_currentFocusIndex].isEmpty) {
+      setState(() => _currentFocusIndex--);
     }
-  }
-
-  void onSubmit() {
-    final pin = enteredDigits.join();
-    if (pin.length == 5 && pin == "12345") {
-      widget.onComplete(pin);
-    } else {
-      setState(() {
-        errorText = "Incorrect PIN. Please try again.";
-        enteredDigits.clear();
-      });
-    }
-  }
-
-  Widget _buildKeyButton({
-    String? text,
-    IconData? icon,
-    Color? backgroundColor,
-    Color? textColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.grey[100],
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: icon != null
-              ? Icon(icon, size: 20)
-              : Text(
-            text ?? '',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: textColor ?? Colors.black,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildPinDots() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(5, (index) {
-        return Container(
-          margin: EdgeInsets.symmetric(horizontal: 6),
-          width: 40,
-          height: 50,
-          decoration: BoxDecoration(
-            border: Border.all(color: Color(0xFF3B5EDF)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Text(
-              index < enteredDigits.length ? '●' : '',
-              style: TextStyle(fontSize: 24, color: Color(0xFF3B5EDF)),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget buildNumberPad() {
-    final keys = [
-      '1', '2', '3',
-      '4', '5', '6',
-      '7', '8', '9',
-    ];
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GridView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: keys.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 1.2,
-          ),
-          itemBuilder: (context, index) {
-            final key = keys[index];
-            return _buildKeyButton(
-              text: key,
-              onTap: () => onKeyTap(key),
-            );
-          },
-        ),
-        SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _buildKeyButton(
-                text: 'Submit',
-                backgroundColor: Color(0xFF3B5EDF),
-                textColor: Colors.white,
-                onTap: onSubmit,
-              ),
-            ),
-            SizedBox(width: 8),
-            Expanded(
-              child: _buildKeyButton(
-                text: '0',
-                onTap: () => onKeyTap('0'),
-              ),
-            ),
-            SizedBox(width: 8),
-            Expanded(
-              child: _buildKeyButton(
-                icon: Icons.backspace_outlined,
-                onTap: onDelete,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
+    setState(() {
+      _otpDigits[_currentFocusIndex] = '';
+    });
+    FocusScope.of(context).requestFocus(_focusNodes[_currentFocusIndex]);
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('PIN verification', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF3B5EDF),
+        iconTheme: IconThemeData(color: Colors.white),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        )
+            : null,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 20),
+                  Icon(Icons.password_outlined, size: 60, color: Theme.of(context).primaryColor),
+                  SizedBox(height: 20),
+                  Text(
+                    'Verify Your PIN',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Enter your 5-digit PIN',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(pinLength, (index) {
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() => _currentFocusIndex = index);
+                          FocusScope.of(context).requestFocus(_focusNodes[index]);
+                        },
+                        child: Container(
+                          width: 45,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                width: 2,
+                                color: _currentFocusIndex == index
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey,
+                              ),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              _otpDigits[index].isNotEmpty ? '*' : '',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  if (_isError)
+                    Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Incorrect PIN. Please try again.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.red,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _verifyOTP,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                        : Text('VERIFY', style: TextStyle(fontSize: 16)),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+          _buildNumericPad(),
+        ],
+      ),
+    );
+  }
 
-    return Center(
+  Widget _buildNumericPad() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      color: Colors.grey[100],
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildKeypadButton('1'),
+              _buildKeypadButton('2'),
+              _buildKeypadButton('3'),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildKeypadButton('4'),
+              _buildKeypadButton('5'),
+              _buildKeypadButton('6'),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildKeypadButton('7'),
+              _buildKeypadButton('8'),
+              _buildKeypadButton('9'),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Container(width: 80, height: 60), // Empty space
+              _buildKeypadButton('0'),
+              _buildKeypadButton('⌫', isBackspace: true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeypadButton(String text, {bool isBackspace = false}) {
+    return SizedBox(
+      width: 80,
+      height: 60,
       child: Material(
         color: Colors.transparent,
-        child: SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.all(20),
-            margin: EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            constraints: BoxConstraints(
-              maxHeight: screenHeight * 0.85,
-              minHeight: 320,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Power off button at top-right
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-
-                ),
-                Text(
-                  "Enter PIN",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 16),
-                buildPinDots(),
-                if (errorText != null) ...[
-                  SizedBox(height: 12),
-                  Text(
-                    errorText!,
-                    style: TextStyle(color: Colors.red, fontSize: 14),
-                  ),
-                ],
-                SizedBox(height: 16),
-                buildNumberPad(),
-              ],
+        child: InkWell(
+          borderRadius: BorderRadius.circular(40),
+          onTap: () {
+            if (isBackspace) {
+              _onBackspacePressed();
+            } else {
+              _onNumberPressed(int.parse(text));
+            }
+          },
+          child: Center(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: isBackspace ? Colors.red : Colors.black,
+              ),
             ),
           ),
         ),
