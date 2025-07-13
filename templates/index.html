@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>PhishSafe Analytics Dashboard</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --accent: #4895ef;
+      --dark: #1b263b;
+      --light: #f8f9fa;
+      --success: #4cc9f0;
+      --warning: #f72585;
+      --danger: #ef233c;
+      --card-bg: #ffffff;
+      --body-bg: #f4f6f8;
+      --text: #2b2d42;
+      --text-light: #8d99ae;
+    }
+
+    [data-theme="dark"] {
+      --card-bg: #2b2d42;
+      --body-bg: #1b263b;
+      --text: #f8f9fa;
+      --text-light: #8d99ae;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--body-bg);
+      color: var(--text);
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      color: var(--primary);
+    }
+
+    .theme-toggle {
+      background: var(--card-bg);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .log-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .log-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .log-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .log-time {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .chip-primary {
+      background-color: rgba(67, 97, 238, 0.1);
+      color: var(--primary);
+    }
+
+    .chip-warning {
+      background-color: rgba(247, 37, 133, 0.1);
+      color: var(--warning);
+    }
+
+    .chip-success {
+      background-color: rgba(76, 201, 240, 0.1);
+      color: var(--success);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+      margin-top: 15px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--primary);
+      opacity: 0.2;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 15px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -30px;
+      top: 5px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--card-bg);
+    }
+
+    .timeline-time {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-bottom: 3px;
+    }
+
+    .timeline-content {
+      font-size: 14px;
+    }
+
+    .chart-container {
+      height: 250px;
+      margin-top: 15px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Animation for new logs */
+    @keyframes highlight {
+      0% { background-color: rgba(67, 97, 238, 0.1); }
+      100% { background-color: var(--card-bg); }
+    }
+
+    .highlight {
+      animation: highlight 2s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><span class="material-icons logo">security</span> PhishSafe Analytics</h1>
+      <button class="theme-toggle" id="themeToggle">
+        <span class="material-icons">brightness_4</span>
+        <span>Toggle Theme</span>
+      </button>
+    </header>
+
+    <div id="statsContainer" class="stats-grid"></div>
+    
+    <div id="logContainer"></div>
+
+    <div class="toast" id="toast">
+      <span class="material-icons">notifications</span>
+      <span id="toastMessage">New session detected!</span>
+    </div>
+  </div>
+
+  <script>
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    themeToggle.addEventListener('click', () => {
+      body.setAttribute('data-theme', body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      const icon = themeToggle.querySelector('.material-icons');
+      icon.textContent = body.getAttribute('data-theme') === 'dark' ? 'brightness_7' : 'brightness_4';
+    });
+
+    // Toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      toastMessage.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Chart creation helper
+    function createDurationChart(canvasId, durations) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      const labels = Object.keys(durations);
+      const data = Object.values(durations);
+      
+      return new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Seconds',
+            data: data,
+            backgroundColor: '#4361ee',
+            borderColor: '#3f37c9',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0,0,0,0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Timeline chart helper
+    function createTimelineChart(containerId, screens) {
+      const options = {
+        series: [{
+          data: screens.map((screen, index) => ({
+            x: screen.screen,
+            y: [
+              new Date(screen.timestamp).getTime(),
+              index < screens.length - 1 
+                ? new Date(screens[index + 1].timestamp).getTime()
+                : new Date(screen.timestamp).getTime() + 10000
+            ]
+          }))
+        }],
+        chart: {
+          type: 'rangeBar',
+          height: 200,
+          toolbar: {
+            show: false
+          }
+        },
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            borderRadius: 4
+          }
+        },
+        dataLabels: {
+          enabled: false
+        },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'light',
+            type: 'vertical',
+            shadeIntensity: 0.25,
+            gradientToColors: undefined,
+            inverseColors: true,
+            opacityFrom: 1,
+            opacityTo: 1,
+            stops: [0, 50, 100],
+            colorStops: [
+              {
+                offset: 0,
+                color: '#4361ee',
+                opacity: 1
+              },
+              {
+                offset: 100,
+                color: '#3f37c9',
+                opacity: 1
+              }
+            ]
+          }
+        },
+        xaxis: {
+          type: 'datetime',
+          labels: {
+            format: 'HH:mm:ss'
+          }
+        },
+        yaxis: {
+          show: true
+        },
+        grid: {
+          row: {
+            colors: ['#f3f4f5', '#fff'],
+            opacity: 1
+          }
+        },
+        tooltip: {
+          custom: function({ series, seriesIndex, dataPointIndex, w }) {
+            const screen = screens[dataPointIndex];
+            const start = new Date(screen.timestamp).toLocaleTimeString();
+            const end = dataPointIndex < screens.length - 1 
+              ? new Date(screens[dataPointIndex + 1].timestamp).toLocaleTimeString()
+              : 'Session end';
+              
+            return `
+              <div class="tooltip">
+                <strong>${screen.screen}</strong>
+                <div>Start: ${start}</div>
+                <div>End: ${end}</div>
+              </div>
+            `;
+          }
+        }
+      };
+      
+      return new ApexCharts(document.getElementById(containerId), options);
+    }
+
+    let previousLogCount = 0;
+    let charts = {};
+
+    async function fetchLogs() {
+      try {
+        const res = await fetch('/logs?t=' + new Date().getTime()); // Cache busting
+        const data = await res.json();
+        const container = document.getElementById('logContainer');
+        const statsContainer = document.getElementById('statsContainer');
+        
+        // Show notification if new logs arrive
+        if (data.length > previousLogCount && previousLogCount > 0) {
+          showToast(`New session detected! ${data.length - previousLogCount} new logs`);
+        }
+        previousLogCount = data.length;
+
+        if (data.length === 0) {
+          container.innerHTML = '<div class="log-card">No session logs found.</div>';
+          statsContainer.innerHTML = '';
+          return;
+        }
+
+        // Update stats cards
+        const totalDuration = data.reduce((sum, log) => sum + (log.content.session?.duration_seconds || 0), 0);
+        const avgDuration = (totalDuration / data.length).toFixed(1);
+        const recordingDetected = data.filter(log => log.content.screen_recording_detected).length;
+        
+        statsContainer.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(67, 97, 238, 0.1); color: var(--primary);">
+              <span class="material-icons">insights</span>
+            </div>
+            <div class="stat-value">${data.length}</div>
+            <div class="stat-label">Total Sessions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success);">
+              <span class="material-icons">timer</span>
+            </div>
+            <div class="stat-value">${avgDuration}</div>
+            <div class="stat-label">Avg Duration (s)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(247, 37, 133, 0.1); color: var(--warning);">
+              <span class="material-icons">videocam_off</span>
+            </div>
+            <div class="stat-value">${recordingDetected}</div>
+            <div class="stat-label">Recording Detected</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(239, 35, 60, 0.1); color: var(--danger);">
+              <span class="material-icons">warning</span>
+            </div>
+            <div class="stat-value">0</div>
+            <div class="stat-label">Suspicious Events</div>
+          </div>
+        `;
+
+        // Clear existing charts
+        Object.values(charts).forEach(chart => {
+          if (chart.destroy) chart.destroy();
+        });
+        charts = {};
+        
+        // Process each log
+        container.innerHTML = '';
+        data.forEach((log, index) => {
+          const session = log.content.session || {};
+          const device = log.content.device || {};
+          const location = log.content.location || {};
+          const screens = log.content.screens_visited || [];
+          const durations = log.content.screen_durations || {};
+          const screenRecording = log.content.screen_recording_detected;
+          
+          const cardId = `log-${index}`;
+          const chartId = `chart-${index}`;
+          const timelineId = `timeline-${index}`;
+          
+          const card = document.createElement('div');
+          card.className = 'log-card';
+          card.id = cardId;
+          
+          card.innerHTML = `
+            <div class="log-header">
+              <div class="log-title">
+                <span class="material-icons">description</span>
+                Session ${index + 1} - ${device.brand || 'Unknown'} ${device.model || 'Device'}
+              </div>
+              <div class="log-time">${new Date(session.start).toLocaleString()}</div>
+            </div>
+            
+            <div class="stats-grid" style="margin-bottom: 20px;">
+              <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(67, 97, 238, 0.1); color: var(--primary);">
+                  <span class="material-icons">timer</span>
+                </div>
+                <div class="stat-value">${session.duration_seconds || 0}</div>
+                <div class="stat-label">Duration (s)</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success);">
+                  <span class="material-icons">layers</span>
+                </div>
+                <div class="stat-value">${screens.length}</div>
+                <div class="stat-label">Screens</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(247, 37, 133, 0.1); color: var(--warning);">
+                  <span class="material-icons">android</span>
+                </div>
+                <div class="stat-value">${device.sdk_int || 'N/A'}</div>
+                <div class="stat-label">SDK Version</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(239, 35, 60, 0.1); color: var(--danger);">
+                  <span class="material-icons">videocam</span>
+                </div>
+                <div class="stat-value">${screenRecording ? 'Yes' : 'No'}</div>
+                <div class="stat-label">Recording</div>
+              </div>
+            </div>
+            
+            <div class="dashboard">
+              <div>
+                <div class="section">
+                  <div class="section-title">
+                    <span class="material-icons">pie_chart</span>
+                    Screen Durations
+                  </div>
+                  <div class="chart-container">
+                    <canvas id="${chartId}"></canvas>
+                  </div>
+                </div>
+                
+                <div class="section">
+                  <div class="section-title">
+                    <span class="material-icons">location_on</span>
+                    Location
+                  </div>
+                  <div>
+                    <span class="chip chip-primary">
+                      <span class="material-icons" style="font-size: 14px;">explore</span>
+                      ${location.latitude || 'N/A'}, ${location.longitude || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <div class="section">
+                  <div class="section-title">
+                    <span class="material-icons">timeline</span>
+                    Screen Timeline
+                  </div>
+                  <div class="chart-container">
+                    <div id="${timelineId}"></div>
+                  </div>
+                </div>
+                
+                <div class="section">
+                  <div class="section-title">
+                    <span class="material-icons">list</span>
+                    Screen Sequence
+                  </div>
+                  <div class="timeline">
+                    ${screens.map(screen => `
+                      <div class="timeline-item">
+                        <div class="timeline-time">${new Date(screen.timestamp).toLocaleTimeString()}</div>
+                        <div class="timeline-content">${screen.screen}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          container.appendChild(card);
+          
+          // Highlight new cards (fixed syntax error)
+          if (index >= (previousLogCount - (data.length - previousLogCount))) {
+            card.classList.add('highlight');
+          }
+          
+          // Create charts after DOM is rendered
+          setTimeout(() => {
+            if (Object.keys(durations).length > 0) {
+              charts[chartId] = createDurationChart(chartId, durations);
+            }
+            
+            if (screens.length > 0) {
+              charts[timelineId] = createTimelineChart(timelineId, screens);
+              charts[timelineId].render();
+            }
+          }, 100);
+        });
+      } catch (error) {
+        console.error('Error fetching logs:', error);
+      }
+    }
+
+    // Initial fetch and auto-refresh every 5 seconds
+    fetchLogs();
+    setInterval(fetchLogs, 5000);
+  </script>
+</body>
+</html>
