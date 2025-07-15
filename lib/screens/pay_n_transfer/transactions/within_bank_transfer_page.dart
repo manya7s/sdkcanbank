@@ -3,6 +3,7 @@ import 'transaction_success_page.dart';
 import 'package:dummy_bank/screens/pin_popup.dart';
 import 'package:phishsafe_sdk/phishsafe_sdk.dart';
 import 'package:phishsafe_sdk/route_aware_wrapper.dart';
+import 'package:phishsafe_sdk/src/integrations/gesture_wrapper.dart'; // <-- Add this import
 import 'package:dummy_bank/observer.dart';
 
 class WithinBankTransferPage extends StatefulWidget {
@@ -16,7 +17,6 @@ class _WithinBankTransferPageState extends State<WithinBankTransferPage> {
   String amount = '';
   String remarks = '';
   String pin = '';
-
 
   void _submitTransfer() {
     if (_formKey.currentState!.validate()) {
@@ -48,67 +48,70 @@ class _WithinBankTransferPageState extends State<WithinBankTransferPage> {
     return RouteAwareWrapper(
       screenName: 'WithinBankTransferPage',
       observer: routeObserver,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            "Transfer within Canara Bank",
-            style: TextStyle(
+      child: GestureWrapper(
+        screenName: 'WithinBankTransferPage',
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              "Transfer within Canara Bank",
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: Color(0xFF3B5EDF),
+            iconTheme: IconThemeData(
               color: Colors.white,
             ),
           ),
-          backgroundColor: Color(0xFF3B5EDF),
-          iconTheme: IconThemeData(
-            color: Colors.white,
-          ),
-        ),
-        body: Padding(
-          padding: EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                _buildField(
-                  label: "Beneficiary Account Number",
-                  hint: "Enter account number",
-                  keyboardType: TextInputType.number,
-                  validator: (val) => val == null || val.isEmpty ? 'Required' : null,
-                  onSaved: (val) => accountNumber = val ?? '',
-                ),
-                _buildField(
-                  label: "Amount",
-                  hint: "Enter amount",
-                  keyboardType: TextInputType.number,
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Required';
-                    final n = num.tryParse(val);
-                    if (n == null || n <= 0) return 'Enter a valid amount';
-                    return null;
-                  },
-                  onSaved: (val) => amount = val ?? '',
-                ),
-                _buildField(
-                  label: "Remarks",
-                  hint: "Remarks (optional)",
-                  keyboardType: TextInputType.text,
-                  validator: null, // Optional
-                  onSaved: (val) => remarks = val ?? '',
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _submitTransfer,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3B5EDF),
-                    minimumSize: Size(double.infinity, 48),
+          body: Padding(
+            padding: EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  _buildField(
+                    label: "Beneficiary Account Number",
+                    hint: "Enter account number",
+                    keyboardType: TextInputType.number,
+                    validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                    onSaved: (val) => accountNumber = val ?? '',
                   ),
-                  child: Text(
-                    "Proceed to Transfer",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
+                  _buildField(
+                    label: "Amount",
+                    hint: "Enter amount",
+                    keyboardType: TextInputType.number,
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return 'Required';
+                      final n = num.tryParse(val);
+                      if (n == null || n <= 0) return 'Enter a valid amount';
+                      return null;
+                    },
+                    onSaved: (val) => amount = val ?? '',
+                  ),
+                  _buildField(
+                    label: "Remarks",
+                    hint: "Remarks (optional)",
+                    keyboardType: TextInputType.text,
+                    validator: null, // Optional
+                    onSaved: (val) => remarks = val ?? '',
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _submitTransfer,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF3B5EDF),
+                      minimumSize: Size(double.infinity, 48),
+                    ),
+                    child: Text(
+                      "Proceed to Transfer",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

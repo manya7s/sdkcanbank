@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phishsafe_sdk/phishsafe_sdk.dart';
 import 'package:phishsafe_sdk/route_aware_wrapper.dart';
+import 'package:phishsafe_sdk/src/integrations/gesture_wrapper.dart'; // <-- Make sure this is imported
 import 'package:dummy_bank/observer.dart';
 
 class FixedDepositPage extends StatefulWidget {
@@ -11,52 +12,55 @@ class FixedDepositPage extends StatefulWidget {
 class _FixedDepositPageState extends State<FixedDepositPage> {
   final Color primaryBlue = Color(0xFF3B5EDF);
 
-
   @override
   Widget build(BuildContext context) {
     return RouteAwareWrapper(
       screenName: 'FixedDepositPage',
       observer: routeObserver,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("Fixed Deposits",
-            style: TextStyle(color: Colors.white),),
-          backgroundColor: Color(0xFF3B5EDF),
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-        body: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Current FDs Section
-              _buildSectionHeader("Your Fixed Deposits"),
-              _buildFDItem(
+      child: GestureWrapper(
+        screenName: 'FixedDepositPage',
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              "Fixed Deposits",
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Color(0xFF3B5EDF),
+            iconTheme: IconThemeData(color: Colors.white),
+          ),
+          body: SingleChildScrollView(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Current FDs Section
+                _buildSectionHeader("Your Fixed Deposits"),
+                _buildFDItem(
                   "FD-456789",
                   "₹1,50,000",
                   "6.75%",
                   "15 May 2025",
-                  Icons.account_balance
-              ),
-              _buildFDItem(
+                  Icons.account_balance,
+                ),
+                _buildFDItem(
                   "FD-987654",
                   "₹2,00,000",
                   "7.25%",
                   "22 Dec 2024",
-                  Icons.savings
-              ),
+                  Icons.savings,
+                ),
+                SizedBox(height: 24),
 
-              SizedBox(height: 24),
+                // New FD Card
+                _buildNewFDCard(),
 
-              // New FD Card
-              _buildNewFDCard(),
+                SizedBox(height: 24),
 
-              SizedBox(height: 24),
-
-              // FD Rates Table
-              _buildSectionHeader("Current Interest Rates"),
-              _buildRateTable(),
-            ],
+                // FD Rates Table
+                _buildSectionHeader("Current Interest Rates"),
+                _buildRateTable(),
+              ],
+            ),
           ),
         ),
       ),

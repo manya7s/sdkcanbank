@@ -3,6 +3,7 @@ import 'transaction_success_page.dart';
 import 'package:dummy_bank/screens/pin_popup.dart';
 import 'package:phishsafe_sdk/phishsafe_sdk.dart';
 import 'package:phishsafe_sdk/route_aware_wrapper.dart';
+import 'package:phishsafe_sdk/src/integrations/gesture_wrapper.dart'; // <-- Add this import
 import 'package:dummy_bank/observer.dart';
 
 class DemandDraftPage extends StatefulWidget {
@@ -16,8 +17,6 @@ class _DemandDraftPageState extends State<DemandDraftPage> {
   String payableAt = '';
   String amount = '';
   String remarks = '';
-
-
 
   void _submitDDRequest() {
     if (_formKey.currentState!.validate()) {
@@ -49,67 +48,70 @@ class _DemandDraftPageState extends State<DemandDraftPage> {
     return RouteAwareWrapper(
       screenName: 'DemandDraftPage',
       observer: routeObserver,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            "Request Demand Draft",
-            style: TextStyle(color: Colors.white),
+      child: GestureWrapper(
+        screenName: 'DemandDraftPage',
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              "Request Demand Draft",
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Color(0xFF3B5EDF),
+            iconTheme: IconThemeData(color: Colors.white),
           ),
-          backgroundColor: Color(0xFF3B5EDF),
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-        body: Padding(
-          padding: EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                _buildField(
-                  label: "Payee Name",
-                  hint: "Enter payee's full name",
-                  keyboardType: TextInputType.name,
-                  validator: (val) => val!.isEmpty ? 'Required' : null,
-                  onSaved: (val) => payeeName = val!,
-                ),
-                _buildField(
-                  label: "Payable At (Location)",
-                  hint: "Enter city or branch",
-                  keyboardType: TextInputType.text,
-                  validator: (val) => val!.isEmpty ? 'Required' : null,
-                  onSaved: (val) => payableAt = val!,
-                ),
-                _buildField(
-                  label: "Amount (₹)",
-                  hint: "Enter amount",
-                  keyboardType: TextInputType.number,
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Required';
-                    final n = num.tryParse(val);
-                    if (n == null || n <= 0) return 'Enter a valid amount';
-                    return null;
-                  },
-                  onSaved: (val) => amount = val!,
-                ),
-                _buildField(
-                  label: "Remarks",
-                  hint: "Purpose (optional)",
-                  keyboardType: TextInputType.text,
-                  validator: null,
-                  onSaved: (val) => remarks = val ?? '',
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _submitDDRequest,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3B5EDF),
-                    minimumSize: Size(double.infinity, 48),
+          body: Padding(
+            padding: EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  _buildField(
+                    label: "Payee Name",
+                    hint: "Enter payee's full name",
+                    keyboardType: TextInputType.name,
+                    validator: (val) => val!.isEmpty ? 'Required' : null,
+                    onSaved: (val) => payeeName = val!,
                   ),
-                  child: Text(
-                    "Proceed to Request DD",
-                    style: TextStyle(color: Colors.white, fontSize: 17),
+                  _buildField(
+                    label: "Payable At (Location)",
+                    hint: "Enter city or branch",
+                    keyboardType: TextInputType.text,
+                    validator: (val) => val!.isEmpty ? 'Required' : null,
+                    onSaved: (val) => payableAt = val!,
                   ),
-                ),
-              ],
+                  _buildField(
+                    label: "Amount (₹)",
+                    hint: "Enter amount",
+                    keyboardType: TextInputType.number,
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return 'Required';
+                      final n = num.tryParse(val);
+                      if (n == null || n <= 0) return 'Enter a valid amount';
+                      return null;
+                    },
+                    onSaved: (val) => amount = val!,
+                  ),
+                  _buildField(
+                    label: "Remarks",
+                    hint: "Purpose (optional)",
+                    keyboardType: TextInputType.text,
+                    validator: null,
+                    onSaved: (val) => remarks = val ?? '',
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _submitDDRequest,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF3B5EDF),
+                      minimumSize: Size(double.infinity, 48),
+                    ),
+                    child: Text(
+                      "Proceed to Request DD",
+                      style: TextStyle(color: Colors.white, fontSize: 17),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

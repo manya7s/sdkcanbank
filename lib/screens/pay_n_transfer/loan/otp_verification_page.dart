@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phishsafe_sdk/phishsafe_sdk.dart';
 import 'package:phishsafe_sdk/route_aware_wrapper.dart';
+import 'package:phishsafe_sdk/src/integrations/gesture_wrapper.dart'; // <-- Add this import
 import 'package:dummy_bank/observer.dart';
 
 class OTPVerificationPage extends StatefulWidget {
@@ -31,27 +32,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   bool _isLoading = false;
   int _currentFocusIndex = 0;
   List<bool> _showDigit = List.filled(6, false);
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   PhishSafeSDK.initSession(); // ✅ Session starts here
-  //   print("✅ PhishSafe session started.");
-  //   _startResendTimer();
-  //   Future.delayed(Duration(milliseconds: 100), () {
-  //     FocusScope.of(context).requestFocus(_focusNodes[0]);
-  //   });
-  // }
-  //
-  // @override
-  // void dispose() {
-  //   PhishSafeSDK.endSession(); // ✅ Session ends here
-  //   print("🛑 PhishSafe session ended.");
-  //   for (var node in _focusNodes) {
-  //     node.dispose();
-  //   }
-  //   super.dispose();
-  // }
 
   void _startResendTimer() {
     Future.delayed(Duration(seconds: 1), () {
@@ -100,7 +80,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
         _otpDigits[_currentFocusIndex] = number.toString();
         _showDigit[_currentFocusIndex] = true;
 
-        // Move to next field after brief delay
         Future.delayed(Duration(milliseconds: 300), () {
           if (mounted) {
             setState(() {
@@ -132,143 +111,146 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     return RouteAwareWrapper(
       screenName: 'OTPVerificationPage',
       observer: routeObserver,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('OTP Verification', style: TextStyle(color: Colors.white)),
-          backgroundColor: Color(0xFF3B5EDF),
-          iconTheme: IconThemeData(color: Colors.white),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: widget.onCancel,
+      child: GestureWrapper(
+        screenName: 'OTPVerificationPage',
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('OTP Verification', style: TextStyle(color: Colors.white)),
+            backgroundColor: Color(0xFF3B5EDF),
+            iconTheme: IconThemeData(color: Colors.white),
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: widget.onCancel,
+            ),
           ),
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(height: 20),
-                    Icon(Icons.sms_outlined, size: 60, color: Theme.of(context).primaryColor),
-                    SizedBox(height: 20),
-                    Text(
-                      'Verify Your Number',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: 20),
+                      Icon(Icons.sms_outlined, size: 60, color: Theme.of(context).primaryColor),
+                      SizedBox(height: 20),
+                      Text(
+                        'Verify Your Number',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      widget.phoneNumber.isNotEmpty
-                          ? 'Enter the OTP sent to ${widget.phoneNumber}'
-                          : 'Enter the 6-digit OTP sent to your mobile',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
+                      SizedBox(height: 10),
+                      Text(
+                        widget.phoneNumber.isNotEmpty
+                            ? 'Enter the OTP sent to ${widget.phoneNumber}'
+                            : 'Enter the 6-digit OTP sent to your mobile',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 40),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: List.generate(6, (index) {
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() => _currentFocusIndex = index);
-                            FocusScope.of(context).requestFocus(_focusNodes[index]);
-                          },
-                          child: Container(
-                            width: 45,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  width: 2,
-                                  color: _currentFocusIndex == index
-                                      ? Theme.of(context).primaryColor
-                                      : Colors.grey,
+                      SizedBox(height: 40),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: List.generate(6, (index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() => _currentFocusIndex = index);
+                              FocusScope.of(context).requestFocus(_focusNodes[index]);
+                            },
+                            child: Container(
+                              width: 45,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    width: 2,
+                                    color: _currentFocusIndex == index
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _showDigit[index] || _otpDigits[index].isEmpty
+                                      ? _otpDigits[index]
+                                      : '*',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
-                            child: Center(
-                              child: Text(
-                                _showDigit[index] || _otpDigits[index].isEmpty
-                                    ? _otpDigits[index]
-                                    : '*',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    if (_isError)
-                      Padding(
-                        padding: EdgeInsets.only(top: 8),
-                        child: Text(
-                          'Invalid OTP. Please try again',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.red,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                          );
+                        }),
                       ),
-                    SizedBox(height: 30),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _verifyOTP,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
-                        ),
-                      )
-                          : Text('VERIFY', style: TextStyle(fontSize: 16)),
-                    ),
-                    SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Didn\'t receive the code? '),
-                        TextButton(
-                          onPressed: _resendCountdown == 0 && !_isLoading
-                              ? () {
-                            setState(() => _resendCountdown = 30);
-                            _startResendTimer();
-                            widget.onResendCode();
-                          }
-                              : null,
+                      if (_isError)
+                        Padding(
+                          padding: EdgeInsets.only(top: 8),
                           child: Text(
-                            _resendCountdown == 0
-                                ? 'Resend OTP'
-                                : 'Resend in $_resendCountdown seconds',
+                            'Invalid OTP. Please try again',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.red,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                      SizedBox(height: 30),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _verifyOTP,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                            : Text('VERIFY', style: TextStyle(fontSize: 16)),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Didn\'t receive the code? '),
+                          TextButton(
+                            onPressed: _resendCountdown == 0 && !_isLoading
+                                ? () {
+                              setState(() => _resendCountdown = 30);
+                              _startResendTimer();
+                              widget.onResendCode();
+                            }
+                                : null,
+                            child: Text(
+                              _resendCountdown == 0
+                                  ? 'Resend OTP'
+                                  : 'Resend in $_resendCountdown seconds',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            _buildNumericPad(),
-          ],
+              _buildNumericPad(),
+            ],
+          ),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'transaction_success_page.dart';
 import 'package:dummy_bank/screens/pin_popup.dart';
 import 'package:phishsafe_sdk/phishsafe_sdk.dart';
 import 'package:phishsafe_sdk/route_aware_wrapper.dart';
+import 'package:phishsafe_sdk/src/integrations/gesture_wrapper.dart'; // <-- Add this import
 import 'package:dummy_bank/observer.dart';
 
 class UpiTransferPage extends StatefulWidget {
@@ -15,8 +16,6 @@ class _UpiTransferPageState extends State<UpiTransferPage> {
   String upiId = '';
   String amount = '';
   String remarks = '';
-
-
 
   void _submitTransfer() {
     if (_formKey.currentState!.validate()) {
@@ -48,64 +47,67 @@ class _UpiTransferPageState extends State<UpiTransferPage> {
     return RouteAwareWrapper(
       screenName: 'UpiTransferPage',
       observer: routeObserver,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            "UPI Transfer",
-            style: TextStyle(color: Colors.white),
+      child: GestureWrapper(
+        screenName: 'UpiTransferPage',
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              "UPI Transfer",
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Color(0xFF3B5EDF),
+            iconTheme: IconThemeData(color: Colors.white),
           ),
-          backgroundColor: Color(0xFF3B5EDF),
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-        body: Padding(
-          padding: EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                _buildField(
-                  label: "Recipient UPI ID",
-                  hint: "e.g. name@bank",
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Required';
-                    //if (!RegExp(r'^[\w.\-]+@[\w]+$').hasMatch(val)) return 'Invalid UPI ID';
-                    return null;
-                  },
-                  onSaved: (val) => upiId = val!,
-                ),
-                _buildField(
-                  label: "Amount (₹)",
-                  hint: "Enter amount",
-                  keyboardType: TextInputType.number,
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Required';
-                    final n = num.tryParse(val);
-                    if (n == null || n <= 0) return 'Enter a valid amount';
-                    return null;
-                  },
-                  onSaved: (val) => amount = val!,
-                ),
-                _buildField(
-                  label: "Remarks",
-                  hint: "Purpose (optional)",
-                  keyboardType: TextInputType.text,
-                  validator: null,
-                  onSaved: (val) => remarks = val ?? '',
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _submitTransfer,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3B5EDF),
-                    minimumSize: Size(double.infinity, 48),
+          body: Padding(
+            padding: EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  _buildField(
+                    label: "Recipient UPI ID",
+                    hint: "e.g. name@bank",
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return 'Required';
+                      //if (!RegExp(r'^[\w.\-]+@[\w]+$').hasMatch(val)) return 'Invalid UPI ID';
+                      return null;
+                    },
+                    onSaved: (val) => upiId = val!,
                   ),
-                  child: Text(
-                    "Proceed to Transfer",
-                    style: TextStyle(color: Colors.white, fontSize: 17),
+                  _buildField(
+                    label: "Amount (₹)",
+                    hint: "Enter amount",
+                    keyboardType: TextInputType.number,
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return 'Required';
+                      final n = num.tryParse(val);
+                      if (n == null || n <= 0) return 'Enter a valid amount';
+                      return null;
+                    },
+                    onSaved: (val) => amount = val!,
                   ),
-                ),
-              ],
+                  _buildField(
+                    label: "Remarks",
+                    hint: "Purpose (optional)",
+                    keyboardType: TextInputType.text,
+                    validator: null,
+                    onSaved: (val) => remarks = val ?? '',
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _submitTransfer,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF3B5EDF),
+                      minimumSize: Size(double.infinity, 48),
+                    ),
+                    child: Text(
+                      "Proceed to Transfer",
+                      style: TextStyle(color: Colors.white, fontSize: 17),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

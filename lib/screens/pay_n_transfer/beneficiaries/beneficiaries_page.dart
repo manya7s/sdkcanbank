@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phishsafe_sdk/phishsafe_sdk.dart';
 import 'package:phishsafe_sdk/route_aware_wrapper.dart';
+import 'package:phishsafe_sdk/src/integrations/gesture_wrapper.dart'; // <-- Add this import
 import 'package:dummy_bank/observer.dart';
 
 class BeneficiariesPage extends StatefulWidget {
@@ -35,23 +36,6 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
   final TextEditingController _ifscController = TextEditingController();
   String _selectedType = 'Within Bank';
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   PhishSafeSDK.initSession(); // ✅ Session starts here
-  //   print("✅ PhishSafe session started.");
-  // }
-  //
-  // @override
-  // void dispose() {
-  //   PhishSafeSDK.endSession(); // ✅ Session ends here
-  //   print("🛑 PhishSafe session ended.");
-  //   _nameController.dispose();
-  //   _accountController.dispose();
-  //   _bankController.dispose();
-  //   _ifscController.dispose();
-  //   super.dispose();
-  // }
 
   void _addBeneficiary() {
     if (_formKey.currentState!.validate()) {
@@ -155,81 +139,84 @@ class _BeneficiariesPageState extends State<BeneficiariesPage> {
     return RouteAwareWrapper(
       screenName: 'BeneficiariesPage',
       observer: routeObserver,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("Manage Beneficiaries",
-            style: TextStyle(color: Colors.white),),
-          backgroundColor: Color(0xFF3B5EDF),
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-        body: _beneficiaries.isEmpty
-            ? Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.people_outline, size: 48, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                "No Beneficiaries Added",
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Tap the + button to add beneficiaries",
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
+      child: GestureWrapper(
+        screenName: 'BeneficiariesPage',
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text("Manage Beneficiaries",
+              style: TextStyle(color: Colors.white),),
+            backgroundColor: Color(0xFF3B5EDF),
+            iconTheme: IconThemeData(color: Colors.white),
           ),
-        )
-            : ListView.builder(
-          padding: EdgeInsets.all(16),
-          itemCount: _beneficiaries.length,
-          itemBuilder: (context, index) {
-            final beneficiary = _beneficiaries[index];
-            return Card(
-              margin: EdgeInsets.only(bottom: 12),
-              elevation: 2,
-              child: ListTile(
-                contentPadding: EdgeInsets.all(16),
-                leading: CircleAvatar(
-                  backgroundColor: beneficiary['type'] == 'Within Bank'
-                      ? Colors.blue[100]
-                      : Colors.green[100],
-                  child: Icon(
-                    beneficiary['type'] == 'Within Bank'
-                        ? Icons.account_balance
-                        : Icons.account_balance_wallet,
-                    color: beneficiary['type'] == 'Within Bank'
-                        ? Colors.blue
-                        : Colors.green,
+          body: _beneficiaries.isEmpty
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline, size: 48, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  "No Beneficiaries Added",
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Tap the + button to add beneficiaries",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          )
+              : ListView.builder(
+            padding: EdgeInsets.all(16),
+            itemCount: _beneficiaries.length,
+            itemBuilder: (context, index) {
+              final beneficiary = _beneficiaries[index];
+              return Card(
+                margin: EdgeInsets.only(bottom: 12),
+                elevation: 2,
+                child: ListTile(
+                  contentPadding: EdgeInsets.all(16),
+                  leading: CircleAvatar(
+                    backgroundColor: beneficiary['type'] == 'Within Bank'
+                        ? Colors.blue[100]
+                        : Colors.green[100],
+                    child: Icon(
+                      beneficiary['type'] == 'Within Bank'
+                          ? Icons.account_balance
+                          : Icons.account_balance_wallet,
+                      color: beneficiary['type'] == 'Within Bank'
+                          ? Colors.blue
+                          : Colors.green,
+                    ),
+                  ),
+                  title: Text(
+                    beneficiary['name'],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 4),
+                      Text("A/C: ${beneficiary['accountNumber']}"),
+                      Text("Bank: ${beneficiary['bank']}"),
+                      Text("IFSC: ${beneficiary['ifsc']}"),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteBeneficiary(beneficiary['id']),
                   ),
                 ),
-                title: Text(
-                  beneficiary['name'],
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 4),
-                    Text("A/C: ${beneficiary['accountNumber']}"),
-                    Text("Bank: ${beneficiary['bank']}"),
-                    Text("IFSC: ${beneficiary['ifsc']}"),
-                  ],
-                ),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteBeneficiary(beneficiary['id']),
-                ),
-              ),
-            );
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _showAddDialog,
-          child: Icon(Icons.add, color: Colors.white),
-          backgroundColor: Color(0xFF3B5EDF),
-          elevation: 4,
+              );
+            },
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: _showAddDialog,
+            child: Icon(Icons.add, color: Colors.white),
+            backgroundColor: Color(0xFF3B5EDF),
+            elevation: 4,
+          ),
         ),
       ),
     );

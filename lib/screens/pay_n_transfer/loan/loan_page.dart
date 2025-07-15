@@ -3,6 +3,7 @@ import 'add_loan_page.dart';
 import 'otp_verification_page.dart';
 import 'package:phishsafe_sdk/phishsafe_sdk.dart';
 import 'package:phishsafe_sdk/route_aware_wrapper.dart';
+import 'package:phishsafe_sdk/src/integrations/gesture_wrapper.dart'; // Added for gesture tracking
 import 'package:dummy_bank/observer.dart';
 
 class LoanPage extends StatefulWidget {
@@ -33,8 +34,6 @@ class _LoanPageState extends State<LoanPage> {
       'color': Colors.green,
     },
   ];
-
-
 
   Color _getColorForLoanType(String type) {
     switch (type) {
@@ -67,7 +66,6 @@ class _LoanPageState extends State<LoanPage> {
   }
 
   Future<void> _addNewLoan() async {
-    // Step 1: Get new loan data from AddLoanPage
     final newLoan = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -76,24 +74,21 @@ class _LoanPageState extends State<LoanPage> {
     );
 
     if (newLoan != null && mounted) {
-      // Step 2: Go to OTPVerificationPage
       final otpVerified = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => OTPVerificationPage(
-            // Pass any required info, e.g. phoneNumber, verificationId
             onVerificationComplete: (otp) {
-              Navigator.of(context).pop(true); // Return true to indicate success
+              Navigator.of(context).pop(true);
             },
             onResendCode: () {},
             onCancel: () {
-              Navigator.of(context).pop(false); // Return false to indicate cancel
+              Navigator.of(context).pop(false);
             },
           ),
         ),
       );
 
-      // Step 3: If OTP was verified, add the loan
       if (otpVerified == true && mounted) {
         setState(() {
           _loans.add({
@@ -118,83 +113,86 @@ class _LoanPageState extends State<LoanPage> {
     return RouteAwareWrapper(
       screenName: 'LoanPage',
       observer: routeObserver,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("My Loans", style: TextStyle(color: Colors.white)),
-          backgroundColor: Color(0xFF3B5EDF),
-          iconTheme: IconThemeData(color: Colors.white),
-          actions: [
-            if (_loans.isNotEmpty)
-              IconButton(
-                icon: Icon(Icons.search),
-                onPressed: () {
-                  // Implement search functionality
-                },
-              ),
-          ],
-        ),
-        body: _loans.isEmpty
-            ? Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      child: GestureWrapper(
+        screenName: 'LoanPage',
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text("My Loans", style: TextStyle(color: Colors.white)),
+            backgroundColor: Color(0xFF3B5EDF),
+            iconTheme: IconThemeData(color: Colors.white),
+            actions: [
+              if (_loans.isNotEmpty)
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    // Implement search functionality
+                  },
+                ),
+            ],
+          ),
+          body: _loans.isEmpty
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.credit_card_off, size: 48, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  "No Loans Added",
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Tap the + button to add loans",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          )
+              : Column(
             children: [
-              Icon(Icons.credit_card_off, size: 48, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                "No Loans Added",
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total Loans: ${_loans.length}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    Text(
+                      'Total Remaining: ₹${_calculateTotalRemaining()}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(height: 8),
-              Text(
-                "Tap the + button to add loans",
-                style: TextStyle(color: Colors.grey),
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.all(16),
+                  itemCount: _loans.length,
+                  itemBuilder: (context, index) {
+                    final loan = _loans[index];
+                    final cardColor = _getColorForLoanType(loan['type']);
+                    return _buildLoanCard(loan, cardColor);
+                  },
+                ),
               ),
             ],
           ),
-        )
-            : Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total Loans: ${_loans.length}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  Text(
-                    'Total Remaining: ₹${_calculateTotalRemaining()}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.all(16),
-                itemCount: _loans.length,
-                itemBuilder: (context, index) {
-                  final loan = _loans[index];
-                  final cardColor = _getColorForLoanType(loan['type']);
-                  return _buildLoanCard(loan, cardColor);
-                },
-              ),
-            ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _addNewLoan,
-          child: Icon(Icons.add, color: Colors.white),
-          backgroundColor: Color(0xFF3B5EDF),
-          elevation: 4,
-          tooltip: 'Add New Loan',
+          floatingActionButton: FloatingActionButton(
+            onPressed: _addNewLoan,
+            child: Icon(Icons.add, color: Colors.white),
+            backgroundColor: Color(0xFF3B5EDF),
+            elevation: 4,
+            tooltip: 'Add New Loan',
+          ),
         ),
       ),
     );
