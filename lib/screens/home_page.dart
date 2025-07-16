@@ -25,14 +25,17 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    PhishSafeSDK.initSession();
     print("✅ PhishSafe session started.");
   }
 
   @override
   void dispose() {
+    PhishSafeSDK.endSession();
     print("🛑 PhishSafe session ended.");
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
