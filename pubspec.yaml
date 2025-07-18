@@ -13,6 +13,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   phishsafe_sdk:
     path: C:/Users/manya/StudioProjects/phishsafe_sdk
+  assets:
+    - assets/trust_score_model.pt
+
+
 
 dev_dependencies:
   flutter_test:
